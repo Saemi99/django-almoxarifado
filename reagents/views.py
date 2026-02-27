@@ -1,9 +1,12 @@
 from django.views import View
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
-from .models import Reagente, Coordenacao, Controlador, SaidaReagente, ReagenteCoordenacao
+from accounts.permissions import get_perfil
+from django.core.exceptions import PermissionDenied
+from .models import Reagente, Coordenacao, SaidaReagente, ReagenteCoordenacao, Controlador
 from .forms import ReagenteForm, ReagenteCoordenacaoFormSet
 
 @login_required(login_url='login')
@@ -32,7 +35,13 @@ def home(request):
     elif ordenar == 'nome':
         qs = qs.order_by('reagente__reagente_nome')
 
-    coordenacoes = Coordenacao.objects.all()
+    perfil = get_perfil(request.user)
+
+    if perfil.tipo == "coord":
+        qs = qs.filter(coordenacao=perfil.coordenacao)
+        coordenacoes = Coordenacao.objects.filter(id=perfil.coordenacao_id)
+    else:
+        coordenacoes = Coordenacao.objects.all()
 
     context = {
         'linhas': qs,
@@ -43,26 +52,41 @@ def home(request):
 
 @login_required(login_url='login')
 def saida_reagente(request):
+    perfil = get_perfil(request.user)
+    if perfil.tipo != "admin":
+        raise PermissionDenied("Sem permissão.")
+    
     if request.method == 'POST':
         reagente_id = request.POST.get('reagente')
         requisitante = request.POST.get('requisitante')
-        quantidade = int(request.POST.get('quantidade'))
+        quantidade_raw = request.POST.get('quantidade')
         coordenacao_id = request.POST.get('coordenacao')
         observacao = request.POST.get('observacao', '')
-        
+
+        # 1️⃣ Validar quantidade
         try:
-            # Buscar o reagente
-            reagente = Reagente.objects.get(id=reagente_id)
-            
-            # Buscar a quantidade disponível para a coordenação
-            rc = ReagenteCoordenacao.objects.get(
-                reagente=reagente,
-                coordenacao_id=coordenacao_id
-            )
-            
-            # Verificar se há quantidade suficiente
-            if rc.quantidade >= quantidade:
-                # Registrar saída
+            quantidade = int(quantidade_raw)
+        except (TypeError, ValueError):
+            messages.error(request, 'Quantidade inválida.')
+            return redirect('saida_reagente')
+
+        if quantidade <= 0:
+            messages.error(request, 'A quantidade deve ser maior que zero.')
+            return redirect('saida_reagente')
+
+        try:
+            with transaction.atomic():
+                reagente = Reagente.objects.get(id=reagente_id)
+
+                rc = ReagenteCoordenacao.objects.select_for_update().get(
+                    reagente=reagente,
+                    coordenacao_id=coordenacao_id
+                )
+
+                if rc.quantidade < quantidade:
+                    messages.error(request, 'Quantidade insuficiente em estoque!')
+                    return redirect('saida_reagente')
+
                 SaidaReagente.objects.create(
                     reagente=reagente,
                     coordenacao_id=coordenacao_id,
@@ -70,25 +94,22 @@ def saida_reagente(request):
                     quantidade=quantidade,
                     observacao=observacao
                 )
-                
-                # Atualizar quantidade
+
                 rc.quantidade -= quantidade
                 rc.save()
-                
+
                 messages.success(request, 'Saída registrada com sucesso!')
-            else:
-                messages.error(request, 'Quantidade insuficiente em estoque!')
-                
+
         except Reagente.DoesNotExist:
             messages.error(request, 'Reagente não encontrado!')
         except ReagenteCoordenacao.DoesNotExist:
             messages.error(request, 'Este reagente não está disponível para esta coordenação!')
         except Exception as e:
             messages.error(request, f'Erro ao registrar saída: {str(e)}')
-        
+
         return redirect('saida_reagente')
-    
-    # GET request
+
+    # GET
     reagente_id = request.GET.get("reagente")
     coord_id = request.GET.get("coord")
     qtd_disponivel = request.GET.get("qtd")
@@ -107,9 +128,12 @@ def saida_reagente(request):
     }
 
     return render(request, "saida.html", context)
-
+    
 @login_required(login_url='login')
 def registro_reagente(request):
+    perfil = get_perfil(request.user)
+    if perfil.tipo != "admin":
+        raise PermissionDenied("Sem permissão.")
     if request.method == 'POST':
         form_reagente = ReagenteForm(request.POST, request.FILES)
         formset = ReagenteCoordenacaoFormSet(request.POST)
@@ -160,7 +184,13 @@ def historico_saida(request):
     else:
         saidas = saidas.order_by('-data_saida')
 
-    coordenacoes = Coordenacao.objects.all()
+    perfil = get_perfil(request.user)
+
+    if perfil.tipo == "coord":
+        saidas = saidas.filter(coordenacao=perfil.coordenacao)
+        coordenacoes = Coordenacao.objects.filter(id=perfil.coordenacao_id)
+    else:
+        coordenacoes = Coordenacao.objects.all()
 
     context = {
         'saidas': saidas,
@@ -171,4 +201,7 @@ def historico_saida(request):
 
 @login_required(login_url='login')
 def gerar_relatorio(request):
+    perfil = get_perfil(request.user)
+    if perfil.tipo != "admin":
+        raise PermissionDenied("Sem permissão.")
     return render(request, 'relatorio.html')

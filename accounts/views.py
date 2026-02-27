@@ -1,10 +1,18 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from accounts.permissions import get_perfil
+from django.core.exceptions import PermissionDenied
+from django.db import transaction
 from accounts.models import Perfil
 from reagents.models import Coordenacao
 
+@login_required(login_url='login')
 def register_view(request):
+    perfil = get_perfil(request.user)
+    if perfil.tipo != "admin":
+        raise PermissionDenied("Sem permissão.")
     coordenacoes = Coordenacao.objects.all()
 
     if request.method == "POST":
@@ -12,32 +20,48 @@ def register_view(request):
         tipo = request.POST.get("tipo")
         coordenacao_id = request.POST.get("coordenacao")
 
-        if user_form.is_valid() and tipo:
-            user = user_form.save()
+        # 1) Validar tipo obrigatório
+        if not tipo:
+            user_form.add_error(None, "Selecione o tipo de usuário.")
 
-            if tipo == "admin":
-                Perfil.objects.create(
-                    user=user,
-                    tipo="admin",
-                    coordenacao=None
-                )
-            else:
-                if not coordenacao_id:
-                    user_form.add_error(None, "Usuário de coordenação precisa escolher uma coordenação.")
-                else:
-                    Perfil.objects.create(
-                        user=user,
-                        tipo="coord",
-                        coordenacao_id=coordenacao_id
-                    )
+        # 2) Regra de negócio: coord precisa de coordenação
+        if tipo == "coord" and not coordenacao_id:
+            user_form.add_error(None, "Usuário de coordenação precisa escolher uma coordenação.")
 
-            return redirect('login')
+        # 3) Só salva se tudo estiver válido
+        if user_form.is_valid() and not user_form.non_field_errors():
+            try:
+                with transaction.atomic():
+                    user = user_form.save()
+
+                    if tipo == "admin":
+                        Perfil.objects.create(
+                            user=user,
+                            tipo="admin",
+                            coordenacao=None
+                        )
+                    elif tipo == "coord":
+                        Perfil.objects.create(
+                            user=user,
+                            tipo="coord",
+                            coordenacao_id=coordenacao_id
+                        )
+                    else:
+                        user_form.add_error(None, "Tipo de usuário inválido.")
+                        raise ValueError("Tipo inválido")
+
+                return redirect("login")
+
+            except Coordenacao.DoesNotExist:
+                user_form.add_error(None, "Coordenação inválida.")
+            except Exception:
+                user_form.add_error(None, "Não foi possível cadastrar o usuário. Tente novamente.")
     else:
         user_form = UserCreationForm()
 
-    return render(request, 'register.html', {
-        'user_form': user_form,
-        'coordenacoes': coordenacoes
+    return render(request, "register.html", {
+        "user_form": user_form,
+        "coordenacoes": coordenacoes
     })
     
 def login_view(request):
