@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Coordenação Geral{% endblock %}
+
+{% block content %}
+<div class="screen active">
+    <div class="form-container">
+        <div class="search-bar">
+            <div style="flex-grow: 1;"></div>
+            <h2>Coordenação Geral</h2>
+            <div style="flex-grow: 1; display: flex; justify-content: flex-end;">
+                <form method="get" action="{% url 'historico_saida' %}" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-clear" onclick="window.location.href='{{ request.path }}'">Limpar</button>
+                    <input type="text" name="search" class="search-input" placeholder="Buscar..." value="{{ request.GET.search }}">
+                    <button type="submit" class="search-button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="filter-buttons">
+            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=validade"
+            class="filter-btn {% if request.GET.ordenar == 'validade' %}active{% endif %}">
+            VALIDADE
+            </a>
+
+            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=nome"
+            class="filter-btn {% if request.GET.ordenar == 'nome' %}active{% endif %}">
+            ORDEM ALFABÉTICA
+            </a>
+        </div>
+    </div>
+
+    <div class="coordination-buttons">
+        <a href="{% url 'historico_saida' %}" class="coord-btn {% if not request.GET.coord %}active{% endif %}">
+            ALMOXARIFADO
+        </a>
+
+        {% for coordenacao in coordenacoes %}
+            <a href="{% url 'historico_saida' %}?coord={{ coordenacao.id }}{% if request.GET.ordenar %}&ordenar={{ request.GET.ordenar }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+            class="coord-btn {% if request.GET.coord == coordenacao.id|stringformat:'s' %}active{% endif %}">
+                {{ coordenacao.nome }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Reagente</th>
+                    <th>Requisitante</th>
+                    <th>Quantidade</th>
+                    <th>Coordenação</th>
+                    <th>Data</th>
+                    <th>Obs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for saida in saidas %}
+                <tr>
+                    <td>{{ saida.reagente.reagente_nome }}</td>
+                    <td>{{ saida.requisitante }}</td>
+                    <td>{{ saida.quantidade }}</td>
+                    <td>{{ saida.coordenacao.nome }}</td>
+                    <td>{{ saida.data_saida|date:"Y-m-d H:i" }}</td>
+                    <td>{{ saida.observacao|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;">Nenhuma saída registrada</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+{% endblock %}

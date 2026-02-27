@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block page_title %}Coordenação Geral{% endblock %}
+
+{% block content %}
+<div class="screen active">
+    <div class="form-container">
+        <div class="search-bar">
+            <div style="flex-grow: 1;"></div>
+            <h2>Coordenação Geral</h2>
+            <div style="flex-grow: 1; display: flex; justify-content: flex-end;">
+                <form method="get" action="{% url 'home' %}" style="display: flex; gap: 10px;">
+                    <button type="button" class="btn btn-clear" onclick="window.location.href='{{ request.path }}'">Limpar</button>
+                    <input type="text" name="search" class="search-input" placeholder="Buscar..." value="{{ request.GET.search }}">
+                    <button type="submit" class="search-button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="filter-buttons">
+            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=validade"
+            class="filter-btn {% if request.GET.ordenar == 'validade' %}active{% endif %}">
+            VALIDADE
+            </a>
+
+            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=nome"
+            class="filter-btn {% if request.GET.ordenar == 'nome' %}active{% endif %}">
+            ORDEM ALFABÉTICA
+            </a>
+        </div>
+    </div>
+
+    <div class="coordination-buttons">
+        <a href="{% url 'home' %}" class="coord-btn {% if not request.GET.coord %}active{% endif %}">
+            ALMOXARIFADO
+        </a>
+
+        {% for coordenacao in coordenacoes %}
+            <a href="{% url 'home' %}?coord={{ coordenacao.id }}{% if request.GET.ordenar %}&ordenar={{ request.GET.ordenar }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+            class="coord-btn {% if request.GET.coord == coordenacao.id|stringformat:'s' %}active{% endif %}">
+                {{ coordenacao.nome }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Reagente</th>
+                <th>FISPQ</th>
+                <th>Armário</th>
+                <th>Coordenação</th>
+                <th>Quantidade</th>
+                <th>Validade</th>
+                <th>Nota</th>
+                <th>Controlador</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in linhas %}
+            <tr>
+                <td>{{ item.reagente.reagente_nome }}</td>
+                <td>{{ item.reagente.fispq }}</td>
+                <td>{{ item.reagente.armario }}</td>
+                <td>{{ item.coordenacao.nome }}</td>
+                <td>{{ item.quantidade }}</td>
+                <td>{{ item.reagente.validade|date:"Y-m-d" }}</td>
+                <td>
+                    {% if item.reagente.nota_fiscal %}
+                        <a href="{{ item.reagente.nota_fiscal.url }}" target="_blank">Ver Nota</a>
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td>{{ item.reagente.controlador.nome }}</td>
+                <td>
+                    <a href="{% url 'saida_reagente' %}?reagente={{ item.reagente.id }}&coord={{ item.coordenacao.id }}&qtd={{ item.quantidade }}"
+                    class="btn btn-add">
+                        Registrar Saída
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align:center;">
+                    Nenhum reagente encontrado
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+
+{% extends 'base.html' %}
+
+{% block page_title %}Login{% endblock %}
+
+{% block content %}
+<div class="screen active">
+    <div class="form-container" style="max-width: 400px; margin: 50px auto;">
+        <h2 style="text-align: center; margin-bottom: 30px;">Login</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-row" style="flex-direction: column;">
+                <div class="form-group">
+                    <label class="form-label">Usuário:</label>
+                    <input type="text" name="username" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Senha:</label>
+                    <input type="password" name="password" class="form-input" required>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button type="submit" class="btn btn-add">Entrar</button>
+            </div>
+        
+        </form>
+    </div>
+</div>
+{% endblock %}

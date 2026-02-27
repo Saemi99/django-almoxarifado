@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+
+    <div>
+        {{ user_form.username.errors }}
+        <label>Usuário:</label>
+        {{ user_form.username }}
+    </div>
+
+    <div>
+        <label>Tipo de usuário:</label>
+        <select name="tipo" id="tipo_usuario" required>
+            <option value="">Selecione...</option>
+            <option value="admin">Administrador</option>
+            <option value="coord">Usuário da Coordenação</option>
+        </select>
+    </div>
+
+    <div id="div_coordenacao" style="display: none;">
+        <label>Coordenação:</label>
+        <select name="coordenacao">
+            <option value="">Selecione...</option>
+            {% for c in coordenacoes %}
+                <option value="{{ c.id }}">{{ c.nome }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        {{ user_form.password1.errors }}
+        <label>Senha:</label>
+        {{ user_form.password1 }}
+    </div>
+
+    <div>
+        {{ user_form.password2.errors }}
+        <label>Confirmação de senha:</label>
+        {{ user_form.password2 }}
+    </div>
+
+    <button type="submit">Cadastrar</button>
+</form>
+
+<script>
+    const tipoSelect = document.getElementById("tipo_usuario");
+    const divCoord = document.getElementById("div_coordenacao");
+
+    tipoSelect.addEventListener("change", function() {
+        if (this.value === "coord") {
+            divCoord.style.display = "block";
+        } else {
+            divCoord.style.display = "none";
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block page_title %}Controle de Saída{% endblock %}
+
+{% block content %}
+<div class="screen active">
+    <div class="form-container">
+        <h2>Controle de Saída</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Reagente:</label>
+                    <select name="reagente" required>
+                        <option value="">Selecione...</option>
+                        {% for reagente in reagentes %}
+                        <option value="{{ reagente.id }}"
+                            {% if reagente_sel == reagente.id|stringformat:"s" %}selected{% endif %}>
+                            {{ reagente.reagente_nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Requisitante:</label>
+                    <input type="text" name="requisitante" required>
+                </div>
+                <div class="form-group">
+                    <label>Quantidade:</label>
+                    <input type="number" name="quantidade" min="1" max="{{ qtd_disponivel }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Coordenação:</label>
+                    <select name="coordenacao" required>
+                        <option value="">Selecione...</option>
+                        {% for coordenacao in coordenacoes %}
+                        <option value="{{ coordenacao.id }}"
+                            {% if coord_sel == coordenacao.id|stringformat:"s" %}selected{% endif %}>
+                            {{ coordenacao.nome }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Observação:</label>
+                    <input type="text" name="observacao">
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="reset" class="btn btn-clear">Limpar</button>
+                <button type="submit" class="btn btn-add">Adicionar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

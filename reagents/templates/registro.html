@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block page_title %}Registro de Entrada{% endblock %}
+
+{% block content %}
+<div class="screen active">
+    <div class="form-container">
+        <h2>Registro de Entrada</h2>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <fieldset>
+                <legend>Dados do Reagente</legend>
+                {{ form.as_p }}
+            </fieldset>
+
+            <fieldset>
+                <legend>Quantidades por Coordenação</legend>
+                {{ formset.management_form }}
+
+                <div id="formset-area">
+                    {% for f in formset %}
+                        <div class="coord-row">
+                            {{ f.coordenacao }}
+                            {{ f.quantidade }}
+                            <button type="button" class="remove-form">❌</button>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" id="add-form">+ Adicionar coordenação</button>
+            </fieldset>
+
+            <button type="submit">Salvar</button>
+        </form>
+    </div>
+</div>
+
+<script>
+const formsetArea = document.getElementById("formset-area");
+const totalForms = document.getElementById("id_reagentecoordenacao_set-TOTAL_FORMS");
+const addButton = document.getElementById("add-form");
+
+addButton.addEventListener("click", function() {
+    const currentFormCount = parseInt(totalForms.value);
+
+    const firstForm = formsetArea.children[0];
+    const newForm = firstForm.cloneNode(true);
+
+    newForm.querySelectorAll("input, select").forEach(input => {
+        input.value = "";
+    });
+
+    updateElementIndex(newForm, currentFormCount);
+
+    formsetArea.appendChild(newForm);
+    totalForms.value = currentFormCount + 1;
+});
+
+formsetArea.addEventListener("click", function(e) {
+    if (e.target.classList.contains("remove-form")) {
+        const row = e.target.closest(".coord-row");
+
+        if (formsetArea.children.length > 1) {
+            row.remove();
+            updateAllIndexes();
+        } else {
+            alert("É necessário pelo menos uma coordenação.");
+        }
+    }
+});
+
+function updateElementIndex(element, index) {
+    element.querySelectorAll("input, select, label").forEach(el => {
+        if (el.name) {
+            el.name = el.name.replace(/-\d+-/, `-${index}-`);
+        }
+        if (el.id) {
+            el.id = el.id.replace(/-\d+-/, `-${index}-`);
+        }
+        if (el.htmlFor) {
+            el.htmlFor = el.htmlFor.replace(/-\d+-/, `-${index}-`);
+        }
+    });
+}
+
+function updateAllIndexes() {
+    const rows = document.querySelectorAll(".coord-row");
+    rows.forEach((row, index) => {
+        updateElementIndex(row, index);
+    });
+    totalForms.value = rows.length;
+}
+
+function getAllSelects() {
+    return document.querySelectorAll('.coord-row select');
+}
+
+function updateCoordOptions() {
+    const selects = getAllSelects();
+
+    // valores escolhidos
+    const selectedValues = Array.from(selects)
+        .map(s => s.value)
+        .filter(v => v !== "");
+
+    selects.forEach(select => {
+        Array.from(select.options).forEach(option => {
+            if (option.value === "") return;
+
+            if (selectedValues.includes(option.value) && option.value !== select.value) {
+                option.disabled = true;
+            } else {
+                option.disabled = false;
+            }
+        });
+    });
+}
+
+/* =========================
+   EVENTOS
+========================= */
+
+// quando mudar uma coordenação
+formsetArea.addEventListener("change", function(e) {
+    if (e.target.tagName === "SELECT") {
+        updateCoordOptions();
+    }
+});
+
+// ao adicionar linha
+addButton.addEventListener("click", function() {
+    setTimeout(() => {
+        updateCoordOptions();
+    }, 0);
+});
+
+// ao remover linha
+formsetArea.addEventListener("click", function(e) {
+    if (e.target.classList.contains("remove-form")) {
+        setTimeout(() => {
+            updateCoordOptions();
+        }, 0);
+    }
+});
+
+// na carga inicial
+updateCoordOptions();
+</script>
+{% endblock %}
