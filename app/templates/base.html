@@ -494,10 +494,6 @@
                             <i class="fas fa-plus-circle"></i>
                             <span>Registro de Entrada</span>
                         </a>
-                        <a href="{% url 'saida_reagente' %}" class="menu-button {% if request.resolver_match.url_name == 'saida_reagente' %}active{% endif %}" data-screen="controle">
-                            <i class="fas fa-minus-circle"></i>
-                            <span>Controle de Saída</span>
-                        </a>
                     {% endif %}
                     <div class="menu-spacer"></div>
                             <form method="post" action="{% url 'logout' %}" style="margin:0;">
@@ -533,9 +529,6 @@
                 {% if is_admin %}
                     <a href="{% url 'registro_reagente' %}" class="menu-button-collapsed {% if request.resolver_match.url_name == 'registro_reagente' %}active{% endif %}">
                         <i class="fas fa-plus-circle"></i>
-                    </a>
-                    <a href="{% url 'saida_reagente' %}" class="menu-button-collapsed {% if request.resolver_match.url_name == 'saida_reagente' %}active{% endif %}">
-                        <i class="fas fa-minus-circle"></i>
                     </a>
                 {% endif %}
                 <div class="menu-spacer"></div>
@@ -594,3 +587,4 @@
     {% block extra_js %}{% endblock %}
 </body>
 </html>
+

@@ -1,27 +1,62 @@
 {% extends 'base.html' %}
 
-{% block page_title %}Coordenação Geral{% endblock %}
+{% block page_title %}Histórico de Saída dos Reagentes{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-bar {
+        justify-content: center;
+    }
+
+    .search-form {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: min(760px, 100%);
+    }
+
+    .search-form .search-input {
+        height: 44px;
+        font-size: 15px;
+    }
+
+    .search-form .btn.btn-clear {
+        height: 44px;
+        padding: 0 18px;
+        border-radius: 12px;
+    }
+
+    .search-form .search-button {
+        width: 46px;
+        height: 44px;
+        border-radius: 12px;
+    }
+
+    .report-btn {
+        border: 2px solid var(--primary-green);
+        background-color: var(--primary-green);
+        color: #fff;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="screen active">
     <div class="form-container">
         <div class="search-bar">
-            <div style="flex-grow: 1;"></div>
-            <h2>Coordenação Geral</h2>
-            <div style="flex-grow: 1; display: flex; justify-content: flex-end;">
-                <form method="get" action="{% url 'historico_saida' %}" style="display: flex; gap: 10px;">
-                    <button type="button" class="btn btn-clear" onclick="window.location.href='{{ request.path }}'">Limpar</button>
-                    <input type="text" name="search" class="search-input" placeholder="Buscar..." value="{{ request.GET.search }}">
-                    <button type="submit" class="search-button">
-                        <i class="fas fa-search"></i>
-                    </button>
-                </form>
-            </div>
+            <form method="get" action="{% url 'historico_saida' %}" class="search-form">
+                <button type="button" class="btn btn-clear" onclick="window.location.href='{{ request.path }}'">Limpar</button>
+                <input type="text" name="search" class="search-input" placeholder="Buscar..." value="{{ request.GET.search }}">
+                <button type="submit" class="search-button">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
         </div>
 
         <div class="filter-buttons">
             {% if is_admin %}
-            <a href="{% url 'gerar_relatorio' %}" class="filter-btn">
+            <a href="{% url 'gerar_relatorio' %}" class="filter-btn report-btn">
             GERAR RELATÓRIO
             </a>
             {% endif %}
