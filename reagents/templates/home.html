@@ -2,6 +2,18 @@
 
 {% block page_title %}Coordenação Geral{% endblock %}
 
+{% block extra_css %}
+<style>
+    tr.row-expired td {
+        background-color: #f7bcbc;
+    }
+
+    tr.row-warning td {
+        background-color: #ffe89a;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="screen active">
     <div class="form-container">
@@ -61,7 +73,7 @@
         </thead>
         <tbody>
             {% for item in linhas %}
-            <tr>
+            <tr class="{% if item.validade_status == 'expired' %}row-expired{% elif item.validade_status == 'warning' %}row-warning{% endif %}">
                 <td>{{ item.reagente.reagente_nome }}</td>
                 <td>{{ item.reagente.fispq }}</td>
                 <td>{{ item.reagente.armario }}</td>
@@ -76,12 +88,15 @@
                     {% endif %}
                 </td>
                 <td>{{ item.reagente.controlador.nome }}</td>
+                {% if is_admin %}
                 <td>
-                    <a href="{% url 'saida_reagente' %}?reagente={{ item.reagente.id }}&coord={{ item.coordenacao.id }}&qtd={{ item.quantidade }}"
+                <a href="{% url 'saida_reagente' %}?reagente={{ item.reagente.id }}&coord={{ item.coordenacao.id }}&qtd={{ item.quantidade }}"
                     class="btn btn-add">
-                        Registrar Saída
-                    </a>
+                    Registrar Saída
+                </a>
                 </td>
+                {% endif %}
+
             </tr>
             {% empty %}
             <tr>

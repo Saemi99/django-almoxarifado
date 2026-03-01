@@ -1,48 +1,119 @@
 {% extends "base.html" %}
+{% block page_title %}Cadastro de Usuario{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-shell {
+        max-width: 760px;
+        width: 100%;
+        margin: 20px auto;
+    }
+
+    .form-shell h2 {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .register-form {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+    }
+
+    .register-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .register-group input,
+    .register-group select {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0 12px;
+        background: #fff;
+    }
+
+    .form-errors {
+        color: #721c24;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .register-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 8px;
+    }
+
+    .register-actions .btn {
+        min-width: 170px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<form method="post">
-    {% csrf_token %}
+<div class="screen active">
+    <div class="form-container form-shell">
+        <h2>Cadastro de Usuario</h2>
 
-    <div>
-        {{ user_form.username.errors }}
-        <label>Usuário:</label>
-        {{ user_form.username }}
+        <form method="post" class="register-form">
+            {% csrf_token %}
+
+            {% if user_form.non_field_errors %}
+                <div class="form-errors">{{ user_form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="register-group">
+                {{ user_form.username.errors }}
+                <label for="{{ user_form.username.id_for_label }}">Usuario:</label>
+                {{ user_form.username }}
+            </div>
+
+            <div class="register-group">
+                <label for="tipo_usuario">Tipo de usuario:</label>
+                <select name="tipo" id="tipo_usuario" required>
+                    <option value="">Selecione...</option>
+                    <option value="admin">Administrador</option>
+                    <option value="coord">Usuario da Coordenacao</option>
+                </select>
+            </div>
+
+            <div id="div_coordenacao" class="register-group" style="display: none;">
+                <label>Coordenacao:</label>
+                <select name="coordenacao">
+                    <option value="">Selecione...</option>
+                    {% for c in coordenacoes %}
+                        <option value="{{ c.id }}">{{ c.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="register-group">
+                {{ user_form.password1.errors }}
+                <label for="{{ user_form.password1.id_for_label }}">Senha:</label>
+                {{ user_form.password1 }}
+            </div>
+
+            <div class="register-group">
+                {{ user_form.password2.errors }}
+                <label for="{{ user_form.password2.id_for_label }}">Confirmacao de senha:</label>
+                {{ user_form.password2 }}
+            </div>
+
+            <div class="register-actions">
+                <button type="reset" class="btn btn-clear">Limpar</button>
+                <button type="submit" class="btn btn-add">Cadastrar</button>
+            </div>
+        </form>
     </div>
-
-    <div>
-        <label>Tipo de usuário:</label>
-        <select name="tipo" id="tipo_usuario" required>
-            <option value="">Selecione...</option>
-            <option value="admin">Administrador</option>
-            <option value="coord">Usuário da Coordenação</option>
-        </select>
-    </div>
-
-    <div id="div_coordenacao" style="display: none;">
-        <label>Coordenação:</label>
-        <select name="coordenacao">
-            <option value="">Selecione...</option>
-            {% for c in coordenacoes %}
-                <option value="{{ c.id }}">{{ c.nome }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    <div>
-        {{ user_form.password1.errors }}
-        <label>Senha:</label>
-        {{ user_form.password1 }}
-    </div>
-
-    <div>
-        {{ user_form.password2.errors }}
-        <label>Confirmação de senha:</label>
-        {{ user_form.password2 }}
-    </div>
-
-    <button type="submit">Cadastrar</button>
-</form>
+</div>
 
 <script>
     const tipoSelect = document.getElementById("tipo_usuario");

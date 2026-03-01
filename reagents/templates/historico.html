@@ -20,15 +20,11 @@
         </div>
 
         <div class="filter-buttons">
-            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=validade"
-            class="filter-btn {% if request.GET.ordenar == 'validade' %}active{% endif %}">
-            VALIDADE
+            {% if is_admin %}
+            <a href="{% url 'gerar_relatorio' %}" class="filter-btn">
+            GERAR RELATÓRIO
             </a>
-
-            <a href="?{% if request.GET.coord %}coord={{ request.GET.coord }}&{% endif %}{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}ordenar=nome"
-            class="filter-btn {% if request.GET.ordenar == 'nome' %}active{% endif %}">
-            ORDEM ALFABÉTICA
-            </a>
+            {% endif %}
         </div>
     </div>
 

@@ -2,11 +2,14 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from accounts.permissions import get_perfil
 from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from accounts.models import Perfil
 from reagents.models import Coordenacao
+
+
 
 @login_required(login_url='login')
 def register_view(request):
@@ -74,12 +77,13 @@ def login_view(request):
             login(request, user)
             return redirect('home')
         else:
-            login_form = AuthenticationForm
+            login_form = AuthenticationForm(request, data=request.POST)
     else:
         login_form = AuthenticationForm()
 
     return render(request, 'login.html', {'login_form': login_form})
 
+@require_POST
 def logout_view(request):
     logout(request)
     return redirect('login')

@@ -1,12 +1,119 @@
 {% extends 'base.html' %}
 {% block page_title %}Registro de Entrada{% endblock %}
 
+{% block extra_css %}
+<style>
+    .main-content {
+        overflow: hidden !important;
+    }
+
+    .screen.form-page-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        overflow-y: auto !important;
+        padding-right: 6px;
+        padding-bottom: 24px;
+    }
+
+    .form-shell {
+        max-width: 860px;
+        width: 100%;
+        margin: 20px auto 32px;
+    }
+
+    .form-shell h2 {
+        text-align: center;
+        margin-bottom: 24px;
+    }
+
+    .entry-form {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .entry-form fieldset {
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 16px;
+        background: #fff;
+    }
+
+    .entry-form legend {
+        padding: 0 8px;
+        font-weight: 700;
+    }
+
+    .entry-form p {
+        margin-bottom: 12px;
+    }
+
+    .entry-form label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+    }
+
+    .entry-form input,
+    .entry-form select,
+    .entry-form textarea {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        padding: 0 12px;
+        background: #fff;
+    }
+
+    .entry-form textarea {
+        min-height: 90px;
+        padding-top: 10px;
+    }
+
+    .coord-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .remove-form {
+        min-height: 42px;
+        min-width: 42px;
+        border: none;
+        border-radius: 10px;
+        background: #b34233;
+        color: #fff;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .form-actions .btn {
+        min-width: 170px;
+    }
+
+    @media (max-width: 760px) {
+        .coord-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="screen active">
-    <div class="form-container">
+<div class="screen active form-page-scroll">
+    <div class="form-container form-shell">
         <h2>Registro de Entrada</h2>
 
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" class="entry-form">
             {% csrf_token %}
 
             <fieldset>
@@ -15,7 +122,7 @@
             </fieldset>
 
             <fieldset>
-                <legend>Quantidades por Coordenação</legend>
+                <legend>Quantidades por Coordenacao</legend>
                 {{ formset.management_form }}
 
                 <div id="formset-area">
@@ -23,15 +130,18 @@
                         <div class="coord-row">
                             {{ f.coordenacao }}
                             {{ f.quantidade }}
-                            <button type="button" class="remove-form">❌</button>
+                            <button type="button" class="remove-form" title="Remover linha">X</button>
                         </div>
                     {% endfor %}
                 </div>
 
-                <button type="button" id="add-form">+ Adicionar coordenação</button>
+                <button type="button" id="add-form" class="btn btn-upload">+ Adicionar coordenacao</button>
             </fieldset>
 
-            <button type="submit">Salvar</button>
+            <div class="form-actions">
+                <button type="reset" class="btn btn-clear">Limpar</button>
+                <button type="submit" class="btn btn-add">Salvar</button>
+            </div>
         </form>
     </div>
 </div>
@@ -43,16 +153,14 @@ const addButton = document.getElementById("add-form");
 
 addButton.addEventListener("click", function() {
     const currentFormCount = parseInt(totalForms.value);
-
     const firstForm = formsetArea.children[0];
     const newForm = firstForm.cloneNode(true);
 
-    newForm.querySelectorAll("input, select").forEach(input => {
+    newForm.querySelectorAll("input, select").forEach((input) => {
         input.value = "";
     });
 
     updateElementIndex(newForm, currentFormCount);
-
     formsetArea.appendChild(newForm);
     totalForms.value = currentFormCount + 1;
 });
@@ -65,13 +173,13 @@ formsetArea.addEventListener("click", function(e) {
             row.remove();
             updateAllIndexes();
         } else {
-            alert("É necessário pelo menos uma coordenação.");
+            alert("E necessario pelo menos uma coordenacao.");
         }
     }
 });
 
 function updateElementIndex(element, index) {
-    element.querySelectorAll("input, select, label").forEach(el => {
+    element.querySelectorAll("input, select, label").forEach((el) => {
         if (el.name) {
             el.name = el.name.replace(/-\d+-/, `-${index}-`);
         }
@@ -93,58 +201,39 @@ function updateAllIndexes() {
 }
 
 function getAllSelects() {
-    return document.querySelectorAll('.coord-row select');
+    return document.querySelectorAll(".coord-row select");
 }
 
 function updateCoordOptions() {
     const selects = getAllSelects();
-
-    // valores escolhidos
     const selectedValues = Array.from(selects)
-        .map(s => s.value)
-        .filter(v => v !== "");
+        .map((s) => s.value)
+        .filter((v) => v !== "");
 
-    selects.forEach(select => {
-        Array.from(select.options).forEach(option => {
+    selects.forEach((select) => {
+        Array.from(select.options).forEach((option) => {
             if (option.value === "") return;
-
-            if (selectedValues.includes(option.value) && option.value !== select.value) {
-                option.disabled = true;
-            } else {
-                option.disabled = false;
-            }
+            option.disabled = selectedValues.includes(option.value) && option.value !== select.value;
         });
     });
 }
 
-/* =========================
-   EVENTOS
-========================= */
-
-// quando mudar uma coordenação
 formsetArea.addEventListener("change", function(e) {
     if (e.target.tagName === "SELECT") {
         updateCoordOptions();
     }
 });
 
-// ao adicionar linha
 addButton.addEventListener("click", function() {
-    setTimeout(() => {
-        updateCoordOptions();
-    }, 0);
+    setTimeout(updateCoordOptions, 0);
 });
 
-// ao remover linha
 formsetArea.addEventListener("click", function(e) {
     if (e.target.classList.contains("remove-form")) {
-        setTimeout(() => {
-            updateCoordOptions();
-        }, 0);
+        setTimeout(updateCoordOptions, 0);
     }
 });
 
-// na carga inicial
 updateCoordOptions();
 </script>
 {% endblock %}

@@ -489,7 +489,7 @@
                         <i class="fas fa-history"></i>
                         <span>Histórico de Saída</span>
                     </a>
-                    {% if user.is_superuser or user.is_staff or user.perfil.tipo == 'admin' %}
+                    {% if is_admin %}
                         <a href="{% url 'registro_reagente' %}" class="menu-button {% if request.resolver_match.url_name == 'registro_reagente' %}active{% endif %}" data-screen="registro">
                             <i class="fas fa-plus-circle"></i>
                             <span>Registro de Entrada</span>
@@ -500,23 +500,19 @@
                         </a>
                     {% endif %}
                     <div class="menu-spacer"></div>
-                    {% if user.is_authenticated %}
-                            <a href="{% url 'logout' %}" class="menu-button">
-                                <i class="fas fa-sign-out-alt"></i>
-                                <span>Sair ({{ user.username }})</span>
-                            </a>
-                                {% if user.is_superuser or user.is_staff or user.perfil.tipo == 'admin' %}
+                            <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="menu-button" style="width:100%; border:none;">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>Sair ({{ user.username }})</span>
+                                </button>
+                            </form>
+                                {% if is_admin %}
                                 <a href="{% url 'register' %}" class="menu-button {% if request.resolver_match.url_name == 'register' %}active{% endif %}">
                                     <i class="fas fa-user-plus"></i>
                                     <span>Cadastro</span>
                                 </a>
                                 {% endif %}
-                    {% else %}
-                            <a href="{% url 'login' %}" class="menu-button {% if request.resolver_match.url_name == 'login' %}active{% endif %}">
-                                <i class="fas fa-sign-in-alt"></i>
-                                <span>Login</span>
-                            </a>
-                    {% endif %}    
                 {% endif %}
             </div>
         </div>
@@ -534,7 +530,7 @@
                 <a href="{% url 'historico_saida' %}" class="menu-button-collapsed {% if request.resolver_match.url_name == 'historico_saida' %}active{% endif %}">
                     <i class="fas fa-history"></i>
                 </a>
-                {% if user.is_superuser or user.is_staff or user.perfil.tipo == 'admin' %}
+                {% if is_admin %}
                     <a href="{% url 'registro_reagente' %}" class="menu-button-collapsed {% if request.resolver_match.url_name == 'registro_reagente' %}active{% endif %}">
                         <i class="fas fa-plus-circle"></i>
                     </a>
@@ -543,17 +539,18 @@
                     </a>
                 {% endif %}
                 <div class="menu-spacer"></div>
-                {% if user.is_authenticated %}
-                <a href="{% url 'logout' %}" class="menu-button-collapsed">
-                    <i class="fas fa-sign-out-alt"></i>
-                </a>
-                    {% if user.is_superuser or user.is_staff or user.perfil.tipo == 'admin' %}
+                    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+                        {% csrf_token %}
+                        <button type="submit" class="menu-button-collapsed" style="width:100%; border:none;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </form>
+                    {% if is_admin %}
                         <a href="{% url 'register' %}" class="menu-button-collapsed {% if request.resolver_match.url_name == 'register' %}active{% endif %}">
                             <i class="fas fa-user-plus"></i>
                             <span>Cadastro</span>
                         </a>
                     {% endif %}
-                {% endif %}
             {% endif %}
             </div>
         </div>
